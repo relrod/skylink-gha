@@ -1,0 +1,46 @@
+name: skylink
+description: Report build status on IRC via @danopia's skylink
+inputs:
+  channel:
+    description: The channel to send to
+    required: true
+  conditional:
+    description:
+      A conditional to check. If true, `on_true` is sent. Otherwise `on_false`.
+  on_true:
+    description: What to say about the build if the conditional is true
+    required: false
+  on_false:
+    description: What to say about the build if the conditional is false
+    required: false
+  username:
+    description: A name to prefix the message with
+    default: ${{ github.repository }}
+runs:
+  using: "composite"
+  steps: 
+    - if: "${{ inputs.conditional }}"
+      name: Notify on true conditional
+      uses: joelwmale/webhook-action@master
+      with:
+        # TODO: escape quotes of inputs in this blob?
+        body:
+          '{"channel": "${{ inputs.channel }}",
+          "username": "${{ github.repository }}",
+          "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+          "text": "${{ inputs.on_true }}"}'
+        headers: '{"repository": "${{ github.repository }}"}'
+        url: https://sl.da.gd/slackjack
+
+    - if: "! ${{ inputs.conditional }}"
+      name: Notify on false conditional
+      uses: joelwmale/webhook-action@master
+      with:
+        # TODO: escape quotes of inputs in this blob?
+        body:
+          '{"channel": "${{ inputs.channel }}",
+          "username": "${{ github.repository }}",
+          "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+          "text": "${{ inputs.on_false }}"}'
+        headers: '{"repository": "${{ github.repository }}"}'
+        url: https://sl.da.gd/slackjack
